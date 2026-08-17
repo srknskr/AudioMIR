@@ -1,0 +1,29 @@
+{
+  "candidate_id": "aaab4c1b",
+  "generation": 0,
+  "representation": "logmel_tempogram",
+  "segment_duration": 12.0,
+  "n_mels": 96,
+  "conv_blocks": 2,
+  "base_channels": 32,
+  "kernel_size": 7,
+  "use_gru": false,
+  "gru_hidden": 32,
+  "dropout": 0.488,
+  "learning_rate": 0.0011114989443094985,
+  "weight_decay": 1.152798712823241e-06,
+  "batch_size": 16,
+  "rank": 0,
+  "crowding_distance": 0.0,
+  "failed": true,
+  "failure_reason": "DualInputNet requires both 'mel' and 'tempogram' tensors!",
+  "metrics": {
+    "params": 0,
+    "model_size_mb": 999.0,
+    "latency_ms": 9999.0,
+    "tempo_acc_4": 0.0,
+    "style_macro_f1": 0.0,
+    "wall_clock_s": 0.47,
+    "error": "DualInputNet requires both 'mel' and 'tempogram' tensors!"
+  }
+}

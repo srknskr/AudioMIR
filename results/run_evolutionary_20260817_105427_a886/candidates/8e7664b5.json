@@ -1,0 +1,86 @@
+{
+  "candidate_id": "8e7664b5",
+  "generation": 0,
+  "representation": "logmel",
+  "segment_duration": 4.0,
+  "n_mels": 64,
+  "conv_blocks": 4,
+  "base_channels": 64,
+  "kernel_size": 3,
+  "use_gru": true,
+  "gru_hidden": 128,
+  "dropout": 0.34,
+  "learning_rate": 0.00012184186502221763,
+  "weight_decay": 0.0003967605077052987,
+  "batch_size": 64,
+  "rank": 0,
+  "crowding_distance": 0.0,
+  "failed": false,
+  "failure_reason": null,
+  "metrics": {
+    "params": 1298407,
+    "model_size_mb": 4.9726,
+    "latency_ms": 8.652,
+    "latency_p95_ms": 12.199,
+    "latency_mean_ms": 9.042,
+    "device_info": {
+      "device_type": "mps",
+      "device_name": "Apple Silicon (MPS)",
+      "platform": "macOS-26.5.1-arm64-arm-64bit",
+      "python_version": "3.11.3",
+      "torch_version": "2.13.0"
+    },
+    "val_loss": 7.9538,
+    "mae_bpm": 111.16031522750855,
+    "median_ae_bpm": 111.46035701036453,
+    "tempo_acc_4": 0.0,
+    "tempo_acc_8": 0.0,
+    "octave_aware_acc": 0.0,
+    "half_tempo_rate": 0.0,
+    "double_tempo_rate": 0.0,
+    "style_macro_f1": 14.285714285714285,
+    "style_weighted_f1": 22.857142857142858,
+    "style_accuracy": 40.0,
+    "style_confusion_matrix": [
+      [
+        0,
+        0,
+        0,
+        4
+      ],
+      [
+        0,
+        0,
+        0,
+        4
+      ],
+      [
+        0,
+        0,
+        0,
+        4
+      ],
+      [
+        0,
+        0,
+        0,
+        8
+      ]
+    ],
+    "meter_macro_f1": 28.57142857142857,
+    "meter_weighted_f1": 22.857142857142858,
+    "meter_accuracy": 40.0,
+    "meter_confusion_matrix": [
+      [
+        8,
+        0
+      ],
+      [
+        12,
+        0
+      ]
+    ],
+    "best_epoch": 2,
+    "wall_clock_s": 22.95
+  }
+}

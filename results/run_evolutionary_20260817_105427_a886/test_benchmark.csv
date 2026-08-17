@@ -1,0 +1,4 @@
+candidate_id,representation,conv_blocks,base_channels,use_gru,params,model_size_mb,latency_ms,test_loss,test_mae_bpm,test_tempo_acc_4,test_tempo_acc_8,test_octave_aware_acc,test_half_tempo_rate,test_double_tempo_rate,test_style_macro_f1,test_style_acc
+c1270b2d,logmel,4,16,False,549143,2.1093,4.528,8.1582,111.23233987092972,0.0,0.0,0.0,0.0,0.0,8.333333333333332,20.0
+0e2c4f1c,logmel_tempogram,2,32,False,241767,0.9372,14.229,7.9723,111.12976669669152,0.0,0.0,0.0,0.0,0.0,8.333333333333332,20.0
+1034c85d,logmel_tempogram,3,16,False,84359,0.3413,3.824,7.9899,111.1237656533718,0.0,0.0,0.0,0.0,0.0,8.333333333333332,20.0
