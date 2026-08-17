@@ -1,6 +1,6 @@
 # AutoMIR: Multi-Objective Automated Machine Learning for Rhythm Understanding
 
-[![CI](https://github.com/serkanseker/AutoMIR/actions/workflows/ci.yml/badge.svg)](https://github.com/serkanseker/AutoMIR/actions)
+[![CI](https://github.com/srknskr/AutoMIR/actions/workflows/ci.yml/badge.svg)](https://github.com/srknskr/AutoMIR/actions)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch 2.1+](https://img.shields.io/badge/PyTorch-2.1%2B-EE4C2C.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -210,7 +210,7 @@ AutoMIR implements a fully transparent, native **NSGA-II (Non-dominated Sorting 
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/serkanseker/AutoMIR.git
+git clone https://github.com/srknskr/AutoMIR.git
 cd AutoMIR
 
 # 2. Create Python virtual environment (Python 3.11+)
@@ -358,6 +358,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   title = {AutoMIR: Multi-Objective Automated Machine Learning for Rhythm Understanding},
   year = {2026},
   publisher = {GitHub},
-  url = {https://github.com/serkanseker/AutoMIR}
+  url = {https://github.com/srknskr/AutoMIR}
 }
 ```
