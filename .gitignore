@@ -36,8 +36,8 @@ env.bak/
 venv.bak/
 
 # Audio datasets & raw audio files
-data/
-datasets/
+/data/
+/datasets/
 raw_data/
 *.wav
 *.mp3
