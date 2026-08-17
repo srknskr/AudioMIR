@@ -10,6 +10,10 @@
 
 Rather than treating model accuracy as an isolated objective, AudioMIR formulates neural architecture search as a **multi-objective Pareto optimization problem**, simultaneously optimizing predictive accuracy, inference latency (ms), and model footprint (MB).
 
+<p align="center">
+  <img src="docs/assets/dashboard_overview.png" alt="AudioMIR Interactive Dashboard Overview" width="100%">
+</p>
+
 ---
 
 ## 📑 Table of Contents
@@ -418,6 +422,10 @@ streamlit run dashboard/app.py
   - 🪶 **Smallest:** Minimum memory and disk footprint.
 - **Audio Visualizers:** Interactive waveform and dynamic Log-Mel / Tempogram heatmaps.
 - **Interactive Pareto Front:** 2D scatter plots (Plotly) exploring multi-objective trade-offs with hover inspections.
+
+<p align="center">
+  <img src="docs/assets/feature_visualizations.png" alt="AudioMIR Real-Time Feature Visualizations & Style Distribution" width="100%">
+</p>
 
 ---
 
