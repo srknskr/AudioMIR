@@ -1,0 +1,47 @@
+# Research GPU workstation configuration
+experiment:
+  name: "research_deep_search"
+  seed: 42
+  device: "auto"
+
+dataset:
+  name: "groove"
+  manifest_path: "data/groove/manifest.csv"
+  audio_dir: "data/groove"
+  sample_rate: 22050
+  num_classes: 9
+  meter_classes: 3
+  enable_meter: true
+  min_examples_per_class: 20
+
+fidelity:
+  level: "SCREEN"
+  quick_fraction: 0.25
+  quick_epochs: 5
+  screen_fraction: 0.50
+  screen_epochs: 12
+  full_fraction: 1.0
+  full_epochs: 50
+  patience: 8
+
+search:
+  strategy: "evolutionary"
+  evaluations: 100
+  population_size: 25
+  crossover_prob: 0.75
+  mutation_prob: 0.35
+  tournament_size: 3
+  objectives:
+    - name: "tempo_acc_4"
+      direction: "maximize"
+    - name: "style_macro_f1"
+      direction: "maximize"
+    - name: "latency_ms"
+      direction: "minimize"
+    - name: "model_size_mb"
+      direction: "minimize"
+
+loss_weights:
+  tempo: 1.0
+  style: 1.0
+  meter: 0.3

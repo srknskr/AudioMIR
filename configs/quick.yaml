@@ -1,0 +1,47 @@
+# Quick testing configuration (designed for fast local testing and CI)
+experiment:
+  name: "quick_test"
+  seed: 42
+  device: "auto"
+
+dataset:
+  name: "synthetic"  # 'synthetic', 'groove', or 'serkan_loops'
+  manifest_path: null
+  audio_dir: null
+  sample_rate: 22050
+  num_classes: 4
+  meter_classes: 2
+  enable_meter: true
+  min_examples_per_class: 5
+
+fidelity:
+  level: "QUICK"
+  quick_fraction: 1.0
+  quick_epochs: 20
+  screen_fraction: 1.0
+  screen_epochs: 20
+  full_fraction: 1.0
+  full_epochs: 25
+  patience: 8
+
+search:
+  strategy: "evolutionary" # 'random', 'tpe', 'evolutionary'
+  evaluations: 10
+  population_size: 6
+  crossover_prob: 0.7
+  mutation_prob: 0.3
+  tournament_size: 2
+  objectives:
+    - name: "tempo_acc_4"
+      direction: "maximize"
+    - name: "style_macro_f1"
+      direction: "maximize"
+    - name: "latency_ms"
+      direction: "minimize"
+    - name: "model_size_mb"
+      direction: "minimize"
+
+loss_weights:
+  tempo: 1.0
+  style: 1.0
+  meter: 0.5
