@@ -109,35 +109,83 @@ AutoMIR provides deterministic audio preprocessing and feature extraction with a
 
 ---
 
-## 4. Deep Learning Model Architectures
+## 4. Deep Learning Architectures & How CNNs Process Audio
+
+### 4.1 The Core Machine Learning Pipeline: Audio to Rhythm Intelligence
+In traditional computer vision, CNNs process 2D RGB images of pixels. In **AutoMIR**, we treat sound as a **2D Time-Frequency Energy Image**:
 
 ```
-+-----------------------------------------------------------------------------------+
-| Model Family       | Description                        | Best For                |
-+--------------------+------------------------------------+-------------------------+
-| 1. TinyCNN         | 2D Conv + BatchNorm + ReLU/Dropout | Ultra-low latency & CPU |
-| 2. CRNN            | 2D Conv + Bidirectional GRU Layer  | Temporal sequence beats |
-| 3. DualInputNet    | Dual-Tower Conv/CRNN + Fusion Dense| Maximum Accuracy/F1     |
-+-----------------------------------------------------------------------------------+
+[Raw Audio Waveform (1D: Amplitude vs Time)]
+                     │
+                     ▼ (Short-Time Fourier Transform & Mel Filterbank)
+[Log-Mel Spectrogram / Tempogram (2D: Frequency/Periodicity vs Time)]
+                     │
+                     ▼ (2D Convolutional Filters slide across Time & Frequency)
+[Hierarchical Feature Maps (Transients, Drum Hits, Rhythmic Motifs)]
+                     │
+                     ▼ (Bidirectional GRU / Global Pooling)
+[Rhythmic Latent Vector (Compact Rhythmic Representation)]
+        ┌────────────┴────────────┐
+        ▼                         ▼
+[Tempo Regression Head]   [Style/Meter Classification Head]
+ log₂(BPM) -> Linear BPM    Softmax Probabilities (Rock/Funk/Jazz/Latin)
 ```
 
-### 4.1 TinyCNN
-- Configurable convolution blocks ($2, 3, 4$).
-- Base channels ($16, 32, 64$) doubling with depth.
-- Adaptive 2D pooling collapsing spatial dimensions into a compact latent vector.
-- Ideal for embedded and edge inference.
+1. **Spectrogram as an Image:** The vertical axis represents frequency (low-end bass/kick to high-end cymbals), and the horizontal axis represents time. The pixel intensity represents energy in decibels (dB).
+2. **2D Convolutional Kernels ($3\times 3, 5\times 5$):** Small learnable filter matrices slide (convolve) across the spectrogram:
+   - **Vertical Edges:** Detect instantaneous broadband transient attacks (kick drum downbeats, snare backbeats, hi-hat ticks).
+   - **Horizontal Stripes:** Detect sustained tonal frequencies and basslines.
+   - **Repetitive Textures:** Detect periodic tempo patterns and recurring rhythmic motifs.
+3. **Batch Normalization & Non-linear Activation (ReLU):** Stabilizes layer activations, prevents internal covariate shift, and enables the network to learn non-linear musical relationships.
+4. **Hierarchical Pooling:** Max-pooling layers progressively downsample spatial dimensions, allowing deeper layers to see larger temporal receptive fields (from milliseconds $\to$ individual beats $\to$ full musical bars).
 
-### 4.2 CRNN (Convolutional Recurrent Neural Network)
-- 2D Conv feature extractor that preserves temporal resolution along the time axis.
-- **Bidirectional GRU layer** (hidden dimension $\in \{32, 64, 128\}$) modeling long-range rhythmic dependencies and syncopated accents.
-- Temporal average pooling feeding into multi-task heads.
+---
 
-### 4.3 DualInputNet (Multi-Modal Fusion)
-- Dedicated convolutional/recurrent tower for Log-Mel spectrograms.
-- Dedicated convolutional/recurrent tower for Fourier tempograms.
-- Feature fusion layer concatenating representations and projecting through dense non-linear layers.
+### 4.2 Model Family Specifications
 
-### 4.4 Multi-Task Output Heads
+```
++------------------------------------------------------------------------------------------------------+
+| Model Family       | Architectural Components              | How It Learns & Operates                |
++--------------------+---------------------------------------+-----------------------------------------+
+| 1. TinyCNN         | 2D Conv + BatchNorm + ReLU + Adaptive | Extracts spatial-frequency features and |
+|                    | 2D Pooling + Linear Multi-Task Heads  | collapses time into a compact embedding.|
++--------------------+---------------------------------------+-----------------------------------------+
+| 2. CRNN            | 2D Conv Extractor + Bidirectional     | Conv layers detect per-frame hits;      |
+|                    | GRU (Sequence Modeling) + Mean Pool   | BiGRU tracks sequence timing & accents. |
++--------------------+---------------------------------------+-----------------------------------------+
+| 3. DualInputNet    | Parallel Log-Mel & Tempogram Towers   | Jointly models acoustic timbre and      |
+|                    | + Dense Fusion Layer (128 units)      | explicit tempo periodicity spectra.     |
++--------------------+---------------------------------------+-----------------------------------------+
+```
+
+#### 1. TinyCNN (Ultra-Lightweight Feature Extractor)
+- Configurable convolution blocks ($B \in [2, 4]$) with channel progression: $C \to 2C \to 4C \to 8C$ ($C \in \{16, 32, 64\}$).
+- Uses `AdaptiveAvgPool2d((1, 1))` to convert variable-length audio spectrograms into fixed-size latent vectors.
+- Optimized for minimal CPU/MPS latency (< 5 ms) and sub-megabyte footprints.
+
+#### 2. CRNN (Convolutional Recurrent Neural Network)
+- **Why Recurrent?** Rhythm is inherently sequential. A pure CNN sees local patches, but a recurrent layer remembers what happened 2 bars ago.
+- The 2D CNN downsamples frequency while preserving the **temporal dimension** ($T$).
+- The feature sequence is passed to a **Bidirectional Gated Recurrent Unit (BiGRU)**:
+  $$\vec{h}_t = \text{GRU}_{\text{fwd}}(\vec{x}_t, \vec{h}_{t-1}), \quad \overleftarrow{h}_t = \text{GRU}_{\text{bwd}}(\vec{x}_t, \overleftarrow{h}_{t+1})$$
+- Captures meter subdivisions ($4/4$ vs $3/4$), syncopated swing feels, and tempo stability over time.
+
+#### 3. DualInputNet (Two-Tower Multi-Modal Fusion)
+- **Log-Mel Tower:** Analyzes acoustic timbre, attack characteristics, and frequency distribution.
+- **Fourier Tempogram Tower:** Analyzes localized autocorrelation and tempo harmonics.
+- **Fusion Layer:** Concatenates both latent representations:
+  $$\mathbf{z}_{\text{fused}} = \text{ReLU}\left(\mathbf{W}_f [\mathbf{z}_{\text{mel}} \,\|\, \mathbf{z}_{\text{tempo}}] + \mathbf{b}_f\right)$$
+- Delivers the highest predictive accuracy across complex cross-genre audio.
+
+---
+
+### 4.3 Multi-Task Learning Formulation & Loss Backpropagation
+AutoMIR optimizes both tempo estimation and style classification simultaneously using a joint loss function:
+
+$$\mathcal{L}_{\text{total}} = \lambda_{\text{tempo}} \mathcal{L}_{\text{SmoothL1}}(\hat{z}, z) + \lambda_{\text{style}} \mathcal{L}_{\text{CrossEntropy}}(\hat{\mathbf{y}}_{\text{style}}, \mathbf{y}_{\text{style}}) + \lambda_{\text{meter}} \mathcal{L}_{\text{CrossEntropy}}(\hat{\mathbf{y}}_{\text{meter}}, \mathbf{y}_{\text{meter}})$$
+
+- **Log-Space Tempo Regression:** Instead of predicting raw linear BPM directly (which has high variance across 60–200 BPM), the model predicts $z = \log_2(\text{BPM})$. The predicted tempo in BPM is reconstructed during inference via $\hat{\text{BPM}} = 2^{\hat{z}}$.
+- **Backpropagation:** Gradients from both tempo regression and style classification backpropagate through shared convolutional layers using the **AdamW optimizer** with Cosine Annealing learning rate schedules.
 - **Tempo Regression Head:** Predicts $\hat{z} = \log_2(\text{BPM})$ using Smooth L1 Loss. The predicted linear tempo is recovered via:
   $$\hat{\text{BPM}} = 2^{\hat{z}}$$
   This formulation handles octave jumps and wide tempo ranges smoothly.
