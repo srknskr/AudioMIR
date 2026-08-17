@@ -112,24 +112,100 @@ AudioMIR provides deterministic audio preprocessing and feature extraction with 
 ## 4. Deep Learning Architectures & How CNNs Process Audio
 
 ### 4.1 The Core Machine Learning Pipeline: Audio to Rhythm Intelligence
-In traditional computer vision, CNNs process 2D RGB images of pixels. In **AudioMIR**, we treat sound as a **2D Time-Frequency Energy Image**:
+In traditional computer vision, CNNs process 2D RGB pixel images. In **AudioMIR**, we treat sound as a **2D Time-Frequency Energy Image**:
 
+```mermaid
+flowchart TD
+    subgraph AudioDSP ["1. DSP & Feature Extraction"]
+        WAV["Raw Audio (1D Waveform)"] --> STFT["STFT & Mel Filterbank / Tempogram"]
+        STFT --> SPEC["2D Feature Matrix [1, Freq/Bins, Time]"]
+    end
+
+    subgraph CNNBackbone ["2. Hierarchical 2D CNN Feature Extractor"]
+        SPEC --> CB1["Conv Block 1: Conv2D(1→C, 3×3) + BatchNorm + ReLU + MaxPool(2×2)"]
+        CB1 --> CB2["Conv Block 2: Conv2D(C→2C, 3×3) + BatchNorm + ReLU + MaxPool(2×2)"]
+        CB2 --> CB3["Conv Block 3: Conv2D(2C→4C, 3×3) + BatchNorm + ReLU + MaxPool(2×2)"]
+    end
+
+    subgraph TemporalModeling ["3. Temporal Sequence Modeling (CRNN)"]
+        CB3 --> GRU["Bidirectional GRU Layer (Hidden Dim = 64)"]
+        GRU --> POOL["Temporal Mean / Adaptive Pooling"]
+        POOL --> LATENT["Compact Rhythmic Latent Vector [128-d]"]
+    end
+
+    subgraph MultiTaskHeads ["4. Multi-Task Output Neurons"]
+        LATENT --> HEAD_TEMPO["Tempo Head: Linear(128→64) → ReLU → Linear(64→1)"]
+        LATENT --> HEAD_STYLE["Style Head: Linear(128→64) → ReLU → Linear(64→N_styles)"]
+        LATENT --> HEAD_METER["Meter Head: Linear(128→32) → ReLU → Linear(32→N_meters)"]
+        
+        HEAD_TEMPO --> BPM_OUT["Predicted Tempo: BPM = 2^(log2_bpm)"]
+        HEAD_STYLE --> STYLE_OUT["Style Probabilities: Softmax (Rock, Funk, Jazz, Latin...)"]
+        HEAD_METER --> METER_OUT["Meter Probabilities: Softmax (4/4, 3/4, 6/8)"]
+    end
+
+    classDef dsp fill:#1e293b,stroke:#64748b,stroke-width:2px,color:#f8fafc;
+    classDef cnn fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#f8fafc;
+    classDef rnn fill:#0f172a,stroke:#8b5cf6,stroke-width:2px,color:#f8fafc;
+    classDef heads fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#f8fafc;
+
+    class WAV,STFT,SPEC dsp;
+    class CB1,CB2,CB3 cnn;
+    class GRU,POOL,LATENT rnn;
+    class HEAD_TEMPO,HEAD_STYLE,HEAD_METER,BPM_OUT,STYLE_OUT,METER_OUT heads;
 ```
-[Raw Audio Waveform (1D: Amplitude vs Time)]
-                     │
-                     ▼ (Short-Time Fourier Transform & Mel Filterbank)
-[Log-Mel Spectrogram / Tempogram (2D: Frequency/Periodicity vs Time)]
-                     │
-                     ▼ (2D Convolutional Filters slide across Time & Frequency)
-[Hierarchical Feature Maps (Transients, Drum Hits, Rhythmic Motifs)]
-                     │
-                     ▼ (Bidirectional GRU / Global Pooling)
-[Rhythmic Latent Vector (Compact Rhythmic Representation)]
-        ┌────────────┴────────────┐
-        ▼                         ▼
-[Tempo Regression Head]   [Style/Meter Classification Head]
- log₂(BPM) -> Linear BPM    Softmax Probabilities (Rock/Funk/Jazz/Latin)
+
+#### Dual-Tower Architecture Diagram (DualInputNet)
+For multi-modal fusion of timbral and rhythmic periodicity spectra:
+
+```mermaid
+flowchart LR
+    subgraph Tower1 ["Log-Mel Tower (Timbre & Energy)"]
+        IN_MEL["Log-Mel Spectrogram [1, 96, T]"] --> CNN_MEL["CNN Backbone / CRNN"]
+        CNN_MEL --> EMB_MEL["Latent Timbre Vector z_mel"]
+    end
+
+    subgraph Tower2 ["Tempogram Tower (Periodicity & Pulse)"]
+        IN_TEMPO["Fourier Tempogram [1, 193, T]"] --> CNN_TEMPO["CNN Backbone / CRNN"]
+        CNN_TEMPO --> EMB_TEMPO["Latent Periodicity Vector z_tempo"]
+    end
+
+    subgraph FusionHead ["Dense Fusion & Multi-Task Prediction"]
+        EMB_MEL & EMB_TEMPO --> CAT["Concatenation [z_mel || z_tempo]"]
+        CAT --> DENSE["Dense Fusion: Linear(256→128) + ReLU + Dropout"]
+        DENSE --> OUT_BPM["Tempo Prediction log2(BPM)"]
+        DENSE --> OUT_STYLE["Style Classification (CrossEntropy)"]
+    end
+
+    classDef tower1 fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#f8fafc;
+    classDef tower2 fill:#1e293b,stroke:#f59e0b,stroke-width:2px,color:#f8fafc;
+    classDef fusion fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#f8fafc;
+
+    class IN_MEL,CNN_MEL,EMB_MEL tower1;
+    class IN_TEMPO,CNN_TEMPO,EMB_TEMPO tower2;
+    class CAT,DENSE,OUT_BPM,OUT_STYLE fusion;
 ```
+
+---
+
+### 4.2 Tensor Shape Transformations (Layer-by-Layer Flow)
+Taking an input audio segment ($8.0\text{ s}$ @ $22,050\text{ Hz}$):
+
+$$\text{Audio Waveform } (B, 1, 176400) \xrightarrow{\text{STFT + Mel Filterbank}} \text{Log-Mel Tensor } (B, 1, 96, 345)$$
+
+| Layer / Stage | Layer Type | Output Tensor Dimension $(B, C, F, T)$ | Musical Feature Extracted |
+|---|---|---|---|
+| **Input** | Audio Tensor | `(B, 1, 96, 345)` | $96$ Mel bins across $345$ time frames |
+| **Conv Block 1** | `Conv2D(1→32) + BN + ReLU + MaxPool` | `(B, 32, 48, 172)` | Transient onsets, drum attacks, cymbal sizzle |
+| **Conv Block 2** | `Conv2D(32→64) + BN + ReLU + MaxPool` | `(B, 64, 24, 86)` | Harmonic overtones, recurring rhythmic subdivisions |
+| **Conv Block 3** | `Conv2D(64→128) + BN + ReLU + MaxPool` | `(B, 128, 12, 43)` | Full beat patterns, syncopation accents |
+| **BiGRU Layer** | `BiGRU(Hidden=64, Bidirectional)` | `(B, 43, 128)` | Long-range bar counts, swing groove, meter phase |
+| **Pooling** | `Temporal Mean Pooling` | `(B, 128)` | Fixed-size global rhythm embedding vector |
+| **Tempo Head** | `Linear(128→64) → Linear(64→1)` | `(B, 1)` | Scalar tempo $\hat{z} = \log_2(\text{BPM})$ |
+| **Style Head** | `Linear(128→64) → Linear(64→N)` | `(B, N_classes)` | Style logits (Rock, Funk, Jazz, Latin...) |
+
+---
+
+### 4.3 How 2D Convolutions Learn on Audio Spectrograms
 
 1. **Spectrogram as an Image:** The vertical axis represents frequency (low-end bass/kick to high-end cymbals), and the horizontal axis represents time. The pixel intensity represents energy in decibels (dB).
 2. **2D Convolutional Kernels ($3\times 3, 5\times 5$):** Small learnable filter matrices slide (convolve) across the spectrogram:
