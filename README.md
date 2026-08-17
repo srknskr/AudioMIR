@@ -1,14 +1,14 @@
-# AutoMIR: Multi-Objective Automated Machine Learning for Rhythm Understanding
+# AudioMIR: Multi-Objective Automated Machine Learning for Rhythm Understanding
 
-[![CI](https://github.com/srknskr/AutoMIR/actions/workflows/ci.yml/badge.svg)](https://github.com/srknskr/AutoMIR/actions)
+[![CI](https://github.com/srknskr/AudioMIR/actions/workflows/ci.yml/badge.svg)](https://github.com/srknskr/AudioMIR/actions)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch 2.1+](https://img.shields.io/badge/PyTorch-2.1%2B-EE4C2C.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.30%2B-FF4B4B.svg)](https://streamlit.io/)
 
-**AutoMIR** is an open-source, research-grade Music Information Retrieval (MIR) and Machine Listening framework that automates the joint discovery of **audio representations**, **deep neural network architectures**, and **training hyperparameters** for rhythm understanding tasks (Tempo Estimation & Rhythm Style Classification).
+**AudioMIR** is an open-source, research-grade Music Information Retrieval (MIR) and Machine Listening framework that automates the joint discovery of **audio representations**, **deep neural network architectures**, and **training hyperparameters** for rhythm understanding tasks (Tempo Estimation & Rhythm Style Classification).
 
-Rather than treating model accuracy as an isolated objective, AutoMIR formulates neural architecture search as a **multi-objective Pareto optimization problem**, simultaneously optimizing predictive accuracy, inference latency (ms), and model footprint (MB).
+Rather than treating model accuracy as an isolated objective, AudioMIR formulates neural architecture search as a **multi-objective Pareto optimization problem**, simultaneously optimizing predictive accuracy, inference latency (ms), and model footprint (MB).
 
 ---
 
@@ -37,7 +37,7 @@ Rather than treating model accuracy as an isolated objective, AutoMIR formulates
 
 Deep learning models in Music Information Retrieval often suffer from excessive parameter counts and high computational latency, making them impractical for real-time applications such as Digital Audio Workstations (DAWs), live performance plugins, and edge/mobile devices.
 
-AutoMIR investigates the following core research questions:
+AudioMIR investigates the following core research questions:
 - **RQ1 (Pareto Frontier Discovery):** *Can automated multi-objective search discover compact, low-latency rhythm models that retain strong predictive accuracy with negligible performance degradation compared to oversized models?*
 - **RQ2 (Audio Representations):** *How do Log-Mel Spectrograms, Fourier Tempograms, and Dual-Tower representations compare across continuous tempo regression and discrete rhythm style classification?*
 - **RQ3 (Algorithmic Comparison):** *Under identical candidate-evaluation budgets, does native evolutionary NSGA-II discover superior Pareto fronts compared to Random Search and Bayesian Optuna/TPE baselines?*
@@ -101,7 +101,7 @@ AutoMIR investigates the following core research questions:
 
 ## 3. Audio Representations & DSP Engine
 
-AutoMIR provides deterministic audio preprocessing and feature extraction with automatic disk caching:
+AudioMIR provides deterministic audio preprocessing and feature extraction with automatic disk caching:
 1. **Log-Mel Spectrogram (`logmel`):** Captures spectral timbre and harmonic distribution across configurable Mel bins ($N_{\text{mels}} \in \{64, 96, 128\}$), with amplitude-to-dB conversion.
 2. **Fourier Tempogram (`tempogram`):** Extracts rhythmic periodicity and tempo harmonics by computing the Short-Time Fourier Transform of the onset strength envelope.
 3. **Dual Representation (`logmel_tempogram`):** Concatenates both spectral (timbral) and periodicity (rhythmic) features into complementary input streams.
@@ -112,7 +112,7 @@ AutoMIR provides deterministic audio preprocessing and feature extraction with a
 ## 4. Deep Learning Architectures & How CNNs Process Audio
 
 ### 4.1 The Core Machine Learning Pipeline: Audio to Rhythm Intelligence
-In traditional computer vision, CNNs process 2D RGB images of pixels. In **AutoMIR**, we treat sound as a **2D Time-Frequency Energy Image**:
+In traditional computer vision, CNNs process 2D RGB images of pixels. In **AudioMIR**, we treat sound as a **2D Time-Frequency Energy Image**:
 
 ```
 [Raw Audio Waveform (1D: Amplitude vs Time)]
@@ -180,7 +180,7 @@ In traditional computer vision, CNNs process 2D RGB images of pixels. In **AutoM
 ---
 
 ### 4.3 Multi-Task Learning Formulation & Loss Backpropagation
-AutoMIR optimizes both tempo estimation and style classification simultaneously using a joint loss function:
+AudioMIR optimizes both tempo estimation and style classification simultaneously using a joint loss function:
 
 $$\mathcal{L}_{\text{total}} = \lambda_{\text{tempo}} \mathcal{L}_{\text{SmoothL1}}(\hat{z}, z) + \lambda_{\text{style}} \mathcal{L}_{\text{CrossEntropy}}(\hat{\mathbf{y}}_{\text{style}}, \mathbf{y}_{\text{style}}) + \lambda_{\text{meter}} \mathcal{L}_{\text{CrossEntropy}}(\hat{\mathbf{y}}_{\text{meter}}, \mathbf{y}_{\text{meter}})$$
 
@@ -196,7 +196,7 @@ $$\mathcal{L}_{\text{total}} = \lambda_{\text{tempo}} \mathcal{L}_{\text{SmoothL
 
 ## 5. Multi-Objective AutoML & NSGA-II Search
 
-AutoMIR implements a fully transparent, native **NSGA-II (Non-dominated Sorting Genetic Algorithm II)**:
+AudioMIR implements a fully transparent, native **NSGA-II (Non-dominated Sorting Genetic Algorithm II)**:
 
 1. **Multi-Objective Problem Formulation:**
    $$\max_{c \in \mathcal{C}} \quad \mathbf{F}(c) = \begin{bmatrix} \text{Tempo Accuracy}_{\pm 4\%}(c) \\ \text{Style Macro-F1}(c) \\ -\text{Median Latency}_{\text{ms}}(c) \\ -\text{Model Size}_{\text{MB}}(c) \end{bmatrix}$$
@@ -258,8 +258,8 @@ AutoMIR implements a fully transparent, native **NSGA-II (Non-dominated Sorting 
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/srknskr/AutoMIR.git
-cd AutoMIR
+git clone https://github.com/srknskr/AudioMIR.git
+cd AudioMIR
 
 # 2. Create Python virtual environment (Python 3.11+)
 python3 -m venv .venv
@@ -273,7 +273,7 @@ pip install -e ".[dev]"
 pytest -v
 ```
 
-> **Hardware Acceleration:** AutoMIR automatically detects and utilizes `CUDA` (Nvidia GPUs), `Apple MPS` (Apple Silicon M1/M2/M3/M4), or falls back to `CPU`.
+> **Hardware Acceleration:** AudioMIR automatically detects and utilizes `CUDA` (Nvidia GPUs), `Apple MPS` (Apple Silicon M1/M2/M3/M4), or falls back to `CPU`.
 
 ---
 
@@ -359,7 +359,7 @@ Every experiment is persistently stored in `results/experiments.sqlite` and JSON
 ## 12. Repository Structure
 
 ```
-AutoMIR/
+AudioMIR/
 ├── .github/workflows/ci.yml           # GitHub Actions CI workflow
 ├── .gitignore                         # Data, caches, and weight exclusions
 ├── LICENSE                            # MIT License
@@ -403,9 +403,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ```bibtex
 @misc{automir2026,
   author = {Serkan Seker},
-  title = {AutoMIR: Multi-Objective Automated Machine Learning for Rhythm Understanding},
+  title = {AudioMIR: Multi-Objective Automated Machine Learning for Rhythm Understanding},
   year = {2026},
   publisher = {GitHub},
-  url = {https://github.com/srknskr/AutoMIR}
+  url = {https://github.com/srknskr/AudioMIR}
 }
 ```
